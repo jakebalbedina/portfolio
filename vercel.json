@@ -15,16 +15,6 @@
       "dest": "/$1"
     }
   ],
-  "env": {
-    "VITE_GROQ_API_KEY": "@groq-api-key",
-    "VITE_OPENROUTER_API_KEY": "@openrouter-api-key"
-  },
-  "build": {
-    "env": {
-      "VITE_GROQ_API_KEY": "@groq-api-key",
-      "VITE_OPENROUTER_API_KEY": "@openrouter-api-key"
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
