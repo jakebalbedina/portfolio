@@ -11,20 +11,37 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
       "src": "/(.*)",
       "dest": "/$1"
     }
   ],
   "env": {
-    "VITE_OPENAI_API_KEY": "@openai-api-key"
+    "VITE_GROQ_API_KEY": "@groq-api-key",
+    "VITE_OPENROUTER_API_KEY": "@openrouter-api-key"
   },
   "build": {
     "env": {
-      "VITE_OPENAI_API_KEY": "@openai-api-key"
+      "VITE_GROQ_API_KEY": "@groq-api-key",
+      "VITE_OPENROUTER_API_KEY": "@openrouter-api-key"
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
 }
