@@ -51,7 +51,7 @@
     </Transition>
 
     <!-- Suggested prompts - Sticky above input -->
-    <div class="flex-shrink-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+    <div class="flex-shrink-0 bg-white dark:bg-gray-900 shadow-sm">
       <div class="max-w-3xl mx-auto px-4 py-3 sm:px-6">
         <!-- Mobile: Horizontal scroll -->
         <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory sm:hidden">
@@ -82,13 +82,13 @@
     </div>
 
     <!-- Input area - Sticky bottom like ChatGPT -->
-    <div class="flex-shrink-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+    <div class="flex-shrink-0 bg-white dark:bg-gray-900">
       <div class="max-w-3xl mx-auto px-4 py-4 sm:px-6">
         <form @submit.prevent="sendMessage" class="relative">
           <input
             v-model="inputMessage"
             type="text"
-            placeholder="Message Jake's assistant..."
+            placeholder="Ask anything about Jake..."
             class="w-full px-4 py-3 pr-12 rounded-2xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none text-sm sm:text-base text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             :disabled="isTyping"
             @keydown="handleKeydown"
@@ -109,7 +109,7 @@
           </button>
         </form>
         <p class="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
-          AI assistant powered by Jake's portfolio data
+          AI assistant powered by Jake's data
         </p>
       </div>
     </div>
