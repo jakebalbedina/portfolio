@@ -1,56 +1,97 @@
 <template>
-  <div :class="{ 'dark': isDark }" class="min-h-screen transition-colors duration-300">
-    <!-- Animated gradient background -->
-    <div class="fixed inset-0 -z-10 overflow-hidden">
-      <div
-        class="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20"
-      ></div>
-      <div class="absolute inset-0 bg-[url('/grid.svg')] opacity-20 dark:opacity-10"></div>
+  <div :class="{ 'dark': isDark }" class="min-h-screen transition-colors duration-200">
+    <!-- Clean, solid background like ChatGPT -->
+    <div class="fixed inset-0 -z-10 bg-white dark:bg-gray-900"></div>
 
-      <!-- Animated orbs -->
-      <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-300/30 dark:bg-purple-500/20 rounded-full blur-3xl animate-pulse-slow"></div>
-      <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-300/30 dark:bg-blue-500/20 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 1s;"></div>
-      <div class="absolute top-1/2 right-1/3 w-96 h-96 bg-pink-300/30 dark:bg-pink-500/20 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 2s;"></div>
-    </div>
-
-    <!-- Main app -->
-    <div class="relative min-h-screen flex flex-col">
-      <!-- Header -->
-      <header class="relative z-10 py-4 px-6">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
+    <!-- Main app - Full height layout -->
+    <div class="relative h-screen h-[100dvh] flex flex-col">
+      <!-- Compact header with theme toggle -->
+      <header class="flex-shrink-0 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm">
               JB
             </div>
             <div>
-              <h1 class="text-xl font-bold text-gray-900 dark:text-white">Jake Balbedina</h1>
-              <p class="text-sm text-gray-600 dark:text-gray-400">Software Developer</p>
+              <h1 class="text-sm font-semibold text-gray-900 dark:text-white">Jake Balbedina</h1>
+              <p class="text-xs text-gray-600 dark:text-gray-400 hidden sm:block">AI Portfolio Assistant</p>
             </div>
           </div>
-
-          <ThemeToggle v-model="isDark" />
+          <div class="flex items-center gap-2">
+            <button
+              @click="handleClearChat"
+              class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 group"
+              title="New Chat"
+              aria-label="Clear chat and start new conversation"
+            >
+              <svg class="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+            <ThemeToggle v-model="isDark" />
+          </div>
         </div>
       </header>
 
-      <!-- Chat Interface -->
-      <main class="flex-1 flex items-center justify-center p-4 pb-8">
-        <ChatInterface :isDark="isDark" />
+      <!-- Chat Interface - Takes remaining space -->
+      <main class="flex-1 overflow-hidden">
+        <ChatInterface ref="chatInterfaceRef" :isDark="isDark" />
       </main>
-
-      <!-- Footer -->
-      <footer class="relative z-10 py-4 text-center text-sm text-gray-600 dark:text-gray-400">
-        <p>Built with Vue 3, Tailwind CSS | © 2026 Jake Balbedina</p>
-      </footer>
     </div>
+
+    <!-- Clear Chat Confirmation Modal -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div
+          v-if="showClearConfirm"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          @click.self="showClearConfirm = false"
+        >
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 max-w-md w-full p-6"
+            @click.stop
+          >
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Clear chat history?</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">This will delete all messages in the current conversation. This action cannot be undone.</p>
+              </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+              <button
+                @click="showClearConfirm = false"
+                class="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                @click="confirmClearChat"
+                class="flex-1 px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors"
+              >
+                Clear Chat
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import ChatInterface from './components/ChatInterface.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 
 const isDark = ref(false)
+const showClearConfirm = ref(false)
+const chatInterfaceRef = ref(null)
 
 onMounted(() => {
   // Check for saved theme preference or system preference
@@ -76,7 +117,43 @@ const updateTheme = () => {
   }
 }
 
-// Update theme when isDark changes
-import { watch } from 'vue'
 watch(isDark, updateTheme)
+
+// Clear chat functionality
+const handleClearChat = () => {
+  showClearConfirm.value = true
+}
+
+const confirmClearChat = () => {
+  if (chatInterfaceRef.value && chatInterfaceRef.value.clearMessages) {
+    chatInterfaceRef.value.clearMessages()
+  }
+  showClearConfirm.value = false
+}
 </script>
+
+<style scoped>
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active .bg-white,
+.modal-leave-active .bg-white,
+.modal-enter-active .dark\:bg-gray-800,
+.modal-leave-active .dark\:bg-gray-800 {
+  transition: transform 0.3s ease;
+}
+
+.modal-enter-from .bg-white,
+.modal-leave-to .bg-white,
+.modal-enter-from .dark\:bg-gray-800,
+.modal-leave-to .dark\:bg-gray-800 {
+  transform: scale(0.95);
+}
+</style>

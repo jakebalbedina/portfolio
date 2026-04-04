@@ -1,21 +1,15 @@
 import portfolioData from '../data/portfolio.js'
+import { API_CONFIG, INTENT_KEYWORDS } from '../config/chatbot.config.js'
 
-// API Configuration
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY
-
-// API Models
-const GROQ_MODEL = 'llama-3.3-70b-versatile'
-const OPENROUTER_MODEL = 'meta-llama/llama-3.2-3b-instruct:free'
-
-// Retry Configuration
-const MAX_RETRIES = 2
-const RETRY_DELAYS = [500, 1000]
-
-// Chat Configuration
-const MAX_HISTORY_MESSAGES = 6
-const TEMPERATURE = 0.7
-const MAX_TOKENS = 800
+// Destructure config for cleaner code
+const {
+  GROQ_API_KEY,
+  OPENROUTER_API_KEY,
+  MODELS,
+  RETRY,
+  CHAT,
+  ENDPOINTS
+} = API_CONFIG
 
 // System prompt for AI
 const SYSTEM_PROMPT = `You are Jake Balbedina, a Software Developer. You are speaking directly to recruiters and visitors in FIRST PERSON. Always respond as "I" and "my", never as "Jake" or third person.
@@ -140,16 +134,19 @@ export async function getChatResponse(userMessage, conversationHistory = []) {
  * Implements exponential backoff for retryable errors
  */
 async function callGroqWithRetries(userMessage, conversationHistory) {
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+  for (let attempt = 0; attempt <= RETRY.MAX_RETRIES; attempt++) {
     try {
       return await callGroq(userMessage, conversationHistory)
     } catch (error) {
-      if (isRetryableError(error) && attempt < MAX_RETRIES) {
-        await delay(RETRY_DELAYS[attempt])
+      const isLastAttempt = attempt >= RETRY.MAX_RETRIES
+
+      if (isRetryableError(error) && !isLastAttempt) {
+        console.warn(`Groq API attempt ${attempt + 1} failed, retrying...`)
+        await delay(RETRY.DELAYS[attempt])
         continue
       }
 
-      console.error(`Groq API failed after ${attempt + 1} attempts:`, error)
+      console.error(`Groq API failed after ${attempt + 1} attempts:`, error.message || error)
       return null
     }
   }
@@ -161,9 +158,11 @@ async function callGroqWithRetries(userMessage, conversationHistory) {
  * Build conversation messages for API
  */
 const buildMessages = (userMessage, conversationHistory) => {
+  const recentHistory = conversationHistory.slice(-CHAT.MAX_HISTORY_MESSAGES)
+
   return [
     { role: 'system', content: SYSTEM_PROMPT },
-    ...conversationHistory.slice(-MAX_HISTORY_MESSAGES).map(msg => ({
+    ...recentHistory.map(msg => ({
       role: msg.type === 'user' ? 'user' : 'assistant',
       content: msg.content
     })),
@@ -181,17 +180,17 @@ async function callGroq(userMessage, conversationHistory) {
 
   const messages = buildMessages(userMessage, conversationHistory)
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const response = await fetch(ENDPOINTS.GROQ, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${GROQ_API_KEY}`
     },
     body: JSON.stringify({
-      model: GROQ_MODEL,
+      model: MODELS.GROQ,
       messages,
-      temperature: TEMPERATURE,
-      max_tokens: MAX_TOKENS,
+      temperature: CHAT.TEMPERATURE,
+      max_tokens: CHAT.MAX_TOKENS,
       top_p: 1,
       stream: false
     })
@@ -230,7 +229,7 @@ async function callOpenRouter(userMessage, conversationHistory) {
   try {
     const messages = buildMessages(userMessage, conversationHistory)
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch(ENDPOINTS.OPENROUTER, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -239,10 +238,10 @@ async function callOpenRouter(userMessage, conversationHistory) {
         'X-Title': 'Jake Balbedina Portfolio'
       },
       body: JSON.stringify({
-        model: OPENROUTER_MODEL,
+        model: MODELS.OPENROUTER,
         messages,
-        temperature: TEMPERATURE,
-        max_tokens: MAX_TOKENS
+        temperature: CHAT.TEMPERATURE,
+        max_tokens: CHAT.MAX_TOKENS
       })
     })
 
@@ -267,13 +266,6 @@ async function callOpenRouter(userMessage, conversationHistory) {
     console.error('OpenRouter API error:', error)
     return null
   }
-}
-
-// Intent Detection Keywords
-const INTENT_KEYWORDS = {
-  skills: ['skills', 'tech', 'technologies', 'tech stack', 'software', 'what do you use', 'what technologies'],
-  projects: ['projects', 'portfolio', 'show me your projects', 'what have you built'],
-  experience: ['work experience', 'job history', 'career', 'where have you worked', 'employment history']
 }
 
 /**

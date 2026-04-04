@@ -1,89 +1,115 @@
 <template>
-  <div class="w-full max-w-[80rem] h-[calc(100vh-200px)] flex flex-col">
-    <!-- Chat container with glassmorphism -->
-    <div class="glass rounded-3xl shadow-2xl overflow-hidden flex flex-col h-full border-2 border-white/20 dark:border-white/10">
-
-      <!-- Messages area -->
-      <div
-        ref="messagesContainer"
-        class="flex-1 overflow-y-auto p-6 space-y-4 scroll-smooth"
-        @scroll="handleScroll"
-      >
-        <!-- Welcome message -->
-        <div v-if="messages.length === 0" class="flex flex-col items-center justify-center h-full space-y-6">
-          <div class="text-6xl animate-bounce">👋</div>
-          <h2 class="text-3xl font-bold gradient-text text-center">
-            Hey! I'm Jake's AI Assistant
-          </h2>
-          <p class="text-gray-600 dark:text-gray-300 text-center max-w-md">
-            Ask me anything about Jake's experience, skills, projects, or how to get in touch!
-          </p>
-
-          <!-- Suggested prompts -->
-          <SuggestedPrompts @openModal="handleOpenModal" />
+  <div class="h-full flex flex-col bg-white dark:bg-gray-900">
+    <!-- Messages area - Centered like ChatGPT -->
+    <div
+      ref="messagesContainer"
+      class="flex-1 overflow-y-auto overscroll-contain"
+      @scroll="handleScroll"
+    >
+      <div class="max-w-3xl mx-auto px-4 py-6 sm:px-6">
+        <!-- Welcome message (only when no messages) -->
+        <div v-if="messages.length === 0" class="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
+          <div class="text-5xl sm:text-6xl">👋</div>
+          <div class="text-center space-y-2">
+            <h2 class="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white">
+              Hi! I'm Jake's AI Assistant
+            </h2>
+            <p class="text-base text-gray-600 dark:text-gray-400 max-w-md">
+              Ask me about Jake's experience, skills, or projects
+            </p>
+          </div>
         </div>
 
-        <!-- Messages -->
-        <TransitionGroup name="message">
-          <MessageBubble
-            v-for="message in messages"
-            :key="message.id"
-            :message="message"
-          />
-        </TransitionGroup>
+        <!-- Messages - Clean spacing -->
+        <div v-if="messages.length > 0" class="space-y-6 py-4">
+          <TransitionGroup name="message">
+            <MessageBubble
+              v-for="message in messages"
+              :key="message.id"
+              :message="message"
+            />
+          </TransitionGroup>
 
-        <!-- Typing indicator -->
-        <TypingIndicator v-if="isTyping" />
+          <!-- Typing indicator -->
+          <TypingIndicator v-if="isTyping" />
+        </div>
       </div>
+    </div>
 
-      <!-- Suggested prompts (shown after first message) -->
-      <div v-if="messages.length > 0 && !isTyping" class="px-6 pb-4 relative">
-        <!-- Scroll to bottom button - centered above chips -->
-        <Transition name="fade-scale">
-          <div
-            v-if="showScrollButton"
-            class="flex justify-center mb-3"
+    <!-- Scroll to bottom button - Floating like ChatGPT -->
+    <Transition name="fade">
+      <button
+        v-if="showScrollButton && messages.length > 0"
+        @click="scrollToBottomSmooth"
+        class="fixed bottom-36 sm:bottom-40 left-1/2 -translate-x-1/2 p-2 rounded-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-lg hover:shadow-xl transition-all duration-200 z-10"
+        aria-label="Scroll to bottom"
+      >
+        <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7" />
+        </svg>
+      </button>
+    </Transition>
+
+    <!-- Suggested prompts - Sticky above input -->
+    <div class="flex-shrink-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+      <div class="max-w-3xl mx-auto px-4 py-3 sm:px-6">
+        <!-- Mobile: Horizontal scroll -->
+        <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory sm:hidden">
+          <button
+            v-for="prompt in suggestedPrompts"
+            :key="prompt.text"
+            @click="handlePromptClick(prompt)"
+            class="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 flex-shrink-0 snap-start touch-manipulation"
           >
-            <button
-              @click="scrollToBottomSmooth"
-              class="group px-4 py-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-2 border-purple-500/30 hover:border-purple-500 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
-              aria-label="Scroll to bottom"
-            >
-              <span class="text-sm font-medium">New messages</span>
-              <svg class="w-4 h-4 group-hover:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-            </button>
-          </div>
-        </Transition>
-        <SuggestedPrompts
-          @openModal="handleOpenModal"
-          :compact="true"
-        />
-      </div>
+            <span class="text-lg">{{ prompt.icon }}</span>
+            <span class="font-medium text-gray-900 dark:text-white text-xs whitespace-nowrap">{{ prompt.text }}</span>
+          </button>
+        </div>
 
-      <!-- Input area -->
-      <div class="p-6 border-t border-gray-200/50 dark:border-gray-700/50">
-        <form @submit.prevent="sendMessage" class="flex gap-3">
+        <!-- Desktop: Grid -->
+        <div class="hidden sm:grid grid-cols-4 gap-2">
+          <button
+            v-for="prompt in suggestedPrompts"
+            :key="prompt.text"
+            @click="handlePromptClick(prompt)"
+            class="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 group"
+          >
+            <span class="text-lg">{{ prompt.icon }}</span>
+            <span class="font-medium text-gray-900 dark:text-white text-xs">{{ prompt.text }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input area - Sticky bottom like ChatGPT -->
+    <div class="flex-shrink-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+      <div class="max-w-3xl mx-auto px-4 py-4 sm:px-6">
+        <form @submit.prevent="sendMessage" class="relative">
           <input
             v-model="inputMessage"
             type="text"
-            placeholder="Ask me anything about Jake..."
-            class="flex-1 px-6 py-4 rounded-2xl bg-white/80 dark:bg-gray-800/80 border-2 border-gray-200/50 dark:border-gray-700/50 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-300"
+            placeholder="Message Jake's assistant..."
+            class="w-full px-4 py-3 pr-12 rounded-2xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none text-sm sm:text-base text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             :disabled="isTyping"
             @keydown="handleKeydown"
           />
           <button
             type="submit"
             :disabled="!inputMessage.trim() || isTyping"
-            class="px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
+            class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white transition-colors duration-200 disabled:cursor-not-allowed"
+            aria-label="Send message"
           >
-            <span v-if="!isTyping">Send</span>
-            <span v-else>...</span>
+            <svg v-if="!isTyping" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+            <svg v-else class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
           </button>
         </form>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-          Powered by AI • Responses may vary
+        <p class="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
+          AI assistant powered by Jake's portfolio data
         </p>
       </div>
     </div>
@@ -100,7 +126,6 @@
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
 import MessageBubble from './MessageBubble.vue'
-import SuggestedPrompts from './SuggestedPrompts.vue'
 import TypingIndicator from './TypingIndicator.vue'
 import Modal from './Modal.vue'
 import { getChatResponse } from '../utils/chatbot'
@@ -109,6 +134,7 @@ import { getChatResponse } from '../utils/chatbot'
 const STORAGE_KEY = 'chatHistory'
 const SCROLL_THRESHOLD = 100
 const TYPING_DELAY = 1000
+const MAX_STORAGE_SIZE = 5 * 1024 * 1024 // 5MB limit for localStorage
 
 // State
 const messages = ref([])
@@ -121,6 +147,14 @@ const isModalOpen = ref(false)
 const modalType = ref(null)
 const showScrollButton = ref(false)
 
+// Suggested prompts for welcome screen
+const suggestedPrompts = [
+  { icon: '👤', text: 'About Jake', description: 'Learn about background & bio', type: 'about' },
+  { icon: '⚡', text: 'Skills & Tech', description: 'View technical expertise', type: 'skills' },
+  { icon: '🚀', text: 'Projects', description: 'Explore portfolio work', type: 'projects' },
+  { icon: '💼', text: 'Experience', description: 'See work history', type: 'experience' }
+]
+
 // Lifecycle
 onMounted(() => {
   const savedMessages = localStorage.getItem(STORAGE_KEY)
@@ -132,7 +166,16 @@ onMounted(() => {
 
 // Storage
 const saveMessages = () => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.value))
+  const data = JSON.stringify(messages.value)
+  // Check storage size to prevent quota exceeded errors
+  if (data.length < MAX_STORAGE_SIZE) {
+    localStorage.setItem(STORAGE_KEY, data)
+  } else {
+    console.warn('Chat history exceeds storage limit. Keeping only recent messages.')
+    // Keep only last 20 messages
+    messages.value = messages.value.slice(-20)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.value))
+  }
 }
 
 // Scrolling
@@ -220,6 +263,13 @@ const closeModal = () => {
   modalType.value = null
 }
 
+// Handle prompt click
+const handlePromptClick = (prompt) => {
+  if (prompt.type) {
+    handleOpenModal(prompt.type)
+  }
+}
+
 // Keyboard Navigation
 const handleKeydown = (event) => {
   if (event.key === 'ArrowUp') {
@@ -248,32 +298,52 @@ const handleKeydown = (event) => {
     }
   }
 }
+
+// Clear Messages
+const clearMessages = () => {
+  messages.value = []
+  messageHistory.value = []
+  historyIndex.value = -1
+  inputMessage.value = ''
+  localStorage.removeItem(STORAGE_KEY)
+}
+
+// Expose methods to parent component
+defineExpose({
+  clearMessages
+})
 </script>
 
 <style scoped>
-.message-enter-active,
-.message-leave-active {
-  transition: all 0.3s ease;
+/* Smooth message animations */
+.message-enter-active {
+  transition: all 0.4s ease-out;
 }
 
 .message-enter-from {
   opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Fade transition for scroll button */
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
   transform: translateY(10px);
 }
 
-.message-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
+/* Hide scrollbar for chips on mobile */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-.fade-scale-enter-active,
-.fade-scale-leave-active {
-  transition: all 0.3s ease;
-}
-
-.fade-scale-enter-from,
-.fade-scale-leave-to {
-  opacity: 0;
-  transform: translateY(-10px) scale(0.95);
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 </style>

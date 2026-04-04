@@ -1,47 +1,54 @@
 <template>
+  <!-- ChatGPT-style message layout -->
   <div
     :class="[
-      'flex',
-      message.type === 'user' ? 'justify-end' : 'justify-start',
-      'animate-slide-up'
+      'group',
+      message.type === 'user' ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800/50'
     ]"
   >
-    <div
-      :class="[
-        'max-w-[80%] rounded-2xl px-6 py-4 shadow-lg',
-        message.type === 'user'
-          ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
-          : 'glass border-2 border-white/20 dark:border-white/10 text-gray-900 dark:text-white'
-      ]"
-    >
-      <!-- Regular text message -->
-      <div v-if="!message.component" v-html="formattedContent" class="prose prose-sm dark:prose-invert max-w-none"></div>
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 py-6">
+      <div class="flex gap-4 sm:gap-6">
+        <!-- Avatar -->
+        <div class="flex-shrink-0">
+          <div
+            :class="[
+              'w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-sm font-semibold text-white',
+              message.type === 'user'
+                ? 'bg-gradient-to-br from-emerald-600 to-teal-600'
+                : 'bg-gradient-to-br from-indigo-600 to-purple-600'
+            ]"
+          >
+            {{ message.type === 'user' ? 'You' : 'JB' }}
+          </div>
+        </div>
 
-      <!-- Dynamic components -->
-      <div v-else>
-        <div v-html="formattedContent" class="prose prose-sm dark:prose-invert max-w-none mb-4"></div>
+        <!-- Message content -->
+        <div class="flex-1 min-w-0 space-y-3">
+          <!-- Regular text message -->
+          <div v-if="!message.component" v-html="formattedContent" class="prose prose-sm sm:prose-base dark:prose-invert max-w-none break-words"></div>
 
-        <!-- Projects component -->
-        <ProjectsGrid v-if="message.component === 'projects'" :projects="message.data" />
+          <!-- Dynamic components -->
+          <template v-else>
+            <div v-html="formattedContent" class="prose prose-sm sm:prose-base dark:prose-invert max-w-none break-words"></div>
 
-        <!-- Skills component -->
-        <SkillsGrid v-if="message.component === 'skills'" :skills="message.data" />
+            <!-- Projects component -->
+            <ProjectsGrid v-if="message.component === 'projects'" :projects="message.data" />
 
-        <!-- Experience component -->
-        <ExperienceList v-if="message.component === 'experience'" :experiences="message.data" />
+            <!-- Skills component -->
+            <SkillsGrid v-if="message.component === 'skills'" :skills="message.data" />
 
-        <!-- Contact component -->
-        <ContactInfo v-if="message.component === 'contact'" :contact="message.data" />
-      </div>
+            <!-- Experience component -->
+            <ExperienceList v-if="message.component === 'experience'" :experiences="message.data" />
 
-      <!-- Timestamp -->
-      <div
-        :class="[
-          'text-xs mt-2 opacity-70',
-          message.type === 'user' ? 'text-right' : 'text-left'
-        ]"
-      >
-        {{ formatTime(message.timestamp) }}
+            <!-- Contact component -->
+            <ContactInfo v-if="message.component === 'contact'" :contact="message.data" />
+          </template>
+
+          <!-- Timestamp -->
+          <div class="text-xs text-gray-500 dark:text-gray-400">
+            {{ formatTime(message.timestamp) }}
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -85,23 +92,36 @@ const formatTime = (timestamp) => {
 </script>
 
 <style scoped>
+/* Clean prose styling */
 :deep(a) {
-  @apply text-blue-500 hover:text-blue-600 underline;
+  @apply text-indigo-600 dark:text-indigo-400 hover:underline;
 }
 
 :deep(code) {
-  @apply bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm;
+  @apply bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded text-sm font-mono text-gray-900 dark:text-gray-100;
 }
 
 :deep(pre) {
-  @apply bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto;
+  @apply bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto text-sm border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100;
+}
+
+:deep(p) {
+  @apply break-words leading-relaxed text-gray-900 dark:text-gray-100;
 }
 
 :deep(ul), :deep(ol) {
-  @apply ml-4;
+  @apply space-y-1 text-gray-900 dark:text-gray-100;
+}
+
+:deep(li) {
+  @apply text-gray-900 dark:text-gray-100;
 }
 
 :deep(strong) {
-  @apply font-semibold;
+  @apply font-semibold text-gray-900 dark:text-white;
+}
+
+:deep(h1), :deep(h2), :deep(h3) {
+  @apply font-semibold text-gray-900 dark:text-white;
 }
 </style>

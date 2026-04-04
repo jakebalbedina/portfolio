@@ -1,9 +1,9 @@
 <template>
-  <div class="space-y-4 mt-4">
+  <div class="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
     <div
       v-for="(exp, index) in experiences"
       :key="index"
-      class="relative pl-8 pb-8 border-l-2 border-purple-200 dark:border-purple-800 last:pb-0"
+      class="relative pl-6 sm:pl-8 pb-6 sm:pb-8 border-l-2 border-purple-200 dark:border-purple-800 last:pb-0"
     >
       <!-- Timeline dot -->
       <div
@@ -16,37 +16,37 @@
       ></div>
 
       <!-- Content -->
-      <div class="glass rounded-xl p-5 border-2 border-white/20 dark:border-white/10 hover:border-purple-400 dark:hover:border-purple-500 transition-all duration-300">
-        <div class="flex items-start justify-between mb-2">
-          <div>
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+      <div class="glass rounded-lg sm:rounded-xl p-4 sm:p-5 border-2 border-white/20 dark:border-white/10 hover:border-purple-400 dark:hover:border-purple-500 transition-all duration-300">
+        <div class="flex items-start justify-between mb-2 gap-2">
+          <div class="flex-1 min-w-0">
+            <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white leading-tight">
               {{ exp.position }}
             </h3>
-            <p class="text-sm font-semibold text-purple-600 dark:text-purple-400">
+            <p class="text-xs sm:text-sm font-semibold text-purple-600 dark:text-purple-400">
               {{ exp.company }}
             </p>
           </div>
           <span
             v-if="exp.current"
-            class="px-3 py-1 text-xs font-bold rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+            class="px-2.5 py-1 text-xs font-bold rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 flex-shrink-0"
           >
             Current
           </span>
         </div>
 
-        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
           {{ exp.period }} • {{ exp.duration }}
         </p>
 
-        <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
+        <p class="text-xs sm:text-sm text-gray-700 dark:text-gray-300 mb-3 leading-relaxed">
           {{ exp.description }}
         </p>
 
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap gap-1.5 sm:gap-2">
           <span
             v-for="tech in exp.technologies"
             :key="tech"
-            class="px-2 py-1 text-xs font-semibold rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+            class="px-2.5 py-1 text-xs font-semibold rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 leading-tight"
           >
             {{ tech }}
           </span>
